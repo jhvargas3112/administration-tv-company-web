@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+	<head>
+		<title>Devices management</title>
+		<style>
+			.username.ng-valid {
+				background-color: lightgreen;
+			}
+			
+			.username.ng-dirty.ng-invalid-required {
+				background-color: red;
+			}
+			
+			.username.ng-dirty.ng-invalid-minlength {
+				background-color: yellow;
+			}
+			
+			.email.ng-valid {
+				background-color: lightgreen;
+			}
+			
+			.email.ng-dirty.ng-invalid-required {
+				background-color: red;
+			}
+			
+			.email.ng-dirty.ng-invalid-email {
+				background-color: yellow;
+			}
+			
+			.tableFixHead {
+				overflow-y: auto;
+				height: 365px;
+			}
+			
+			.tableFixHead table {
+				border-collapse: collapse;
+				width: 100%;
+			}
+			
+			.tableFixHead th, .tableFixHead td {
+				padding: 8px 16px;
+			}
+			
+			.tableFixHead th {
+				position: sticky;
+				top: 0;
+				background: #eee;
+			}
+			
+			.header {
+				overflow: hidden;
+				background-color: #9F9C97;
+				padding: 20px 10px;
+			}
+			
+			.header a {
+				float: left;
+				color: white;
+				text-align: center;
+				padding: 12px;
+				text-decoration: none;
+				font-size: 16px;
+				line-height: 25px;
+				border-radius: 4px;
+			}
+			
+			.header a.logo {
+				font-size: 16px;
+				font-weight: bold;
+			}
+			
+			.header a:hover {
+				background-color: #ddd;
+				color: black;
+			}
+			
+			.header a.active {
+				background-color: #093272;
+				color: white;
+			}
+			
+			.header-right {
+				float: right;
+			}
+			
+			.footer {
+				position: fixed;
+				bottom: 0;
+				width: 100%;
+				height: 80px; /* Height of the footer */
+				background-color: #9F9C97;
+				color: white;
+				text-align: center;
+			}
+			
+			.float {
+				position: absolute;
+				width: 60px;
+				height: 60px;
+				background-color: #0C9;
+				color: #FFF;
+				border-radius: 50px;
+				text-align: center;
+				box-shadow: 2px 2px 3px #999;
+			}
+			
+			@-moz-keyframes spin { 
+				0% {-moz-transform: rotate(0deg);}
+				100% {-moz-transform: rotate(359deg);}
+			}
+			
+			@-webkit-keyframes spin { 
+				0% {-webkit-transform: rotate(0deg);}
+				100%{-webkit-transform:rotate(359deg);}
+			}
+			
+			@-o-keyframes spin {
+				0% {-o-transform: rotate(0deg);}
+				100% {-o-transform: rotate(359deg);}
+			}
+			
+			@keyframes spin {
+				0% {
+					-webkit-transform: rotate(0deg);
+					transform: rotate(0deg);
+				}
+				100%{-webkit-transform: rotate(359deg); transform: rotate(359deg);}
+			}
+			
+			.gly-spin {
+				-webkit-animation: spin 2s infinite linear;
+				-moz-animation: spin 2s infinite linear;
+				-o-animation: spin 2s infinite linear;
+				animation: spin 2s infinite linear;
+			}
+			
+			.gly-rotate-90 {
+				filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
+				-webkit-transform: rotate(90deg);
+				-moz-transform: rotate(90deg);
+				-ms-transform: rotate(90deg);
+				-o-transform: rotate(90deg);
+				transform: rotate(90deg);
+			}
+			
+			.gly-rotate-180 {
+				filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2);
+				-webkit-transform: rotate(180deg);
+				-moz-transform: rotate(180deg);
+				-ms-transform: rotate(180deg);
+				-o-transform: rotate(180deg);
+				transform: rotate(180deg);
+			}
+			
+			.gly-rotate-270 {
+				filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+				-webkit-transform: rotate(270deg);
+				-moz-transform: rotate(270deg);
+				-ms-transform: rotate(270deg);
+				-o-transform: rotate(270deg);
+				transform: rotate(270deg);
+			}
+			
+			.gly-flip-horizontal {
+				filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=0, mirror=1);
+				-webkit-transform: scale(-1, 1);
+				-moz-transform: scale(-1, 1);
+				-ms-transform: scale(-1, 1);
+				-o-transform: scale(-1, 1);
+				transform: scale(-1, 1);
+			}
+			
+			.gly-flip-vertical {
+				filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2, mirror=1);
+				-webkit-transform: scale(1, -1);
+				-moz-transform: scale(1, -1);
+				-ms-transform: scale(1, -1);
+				-o-transform: scale(1, -1);
+				transform: scale(1, -1);
+			}
+		</style>
+	
+		<link rel="stylesheet"
+			href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+		<script
+			src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script
+			src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	</head>
+
+	<body ng-app="perfiles" class="ng-cloak">
+		<div class="header">
+			<img th:src="@{images/logonn.png}" />
+			<div class="header-right" ng-controller="StatsController as statsCtrl">
+				<a class="active" href="http://localhost:8081/nntv-control/devices">Decodificadores</a>
+				<a href="http://localhost:8081/nntv-control/accounts">Cuentas</a> <a th:if="${session.authority} == 'ROLE_COMPANY'"
+				id="globalConsumption" class="btn btn-light"
+				ng-click="statsCtrl.calculateGlobalCompanyConsumption();">
+				Consumo global </a> <a
+				th:if="${session.authority} == 'ROLE_ADMIN'"
+				id="globalConsumption" class="btn btn-light"
+				ng-click="statsCtrl.calculateGlobalConsumption();">
+				Consumo global ADMIN</a> <a th:href="@{/logout}" method="post"
+					class="glyphicon glyphicon-log-out" title="Salir"></a>
+			</div>
+		</div>
+	
+		<div ng-controller="DeviceController as deviceCtrl">
+			<div class="generic-container"
+				ng-controller="StatsController as statsCtrl">
+				<div class="panel-body">
+					<div class="panel panel-default"
+						th:attr="ng-init='deviceCtrl.fetchAllDevicesOfCompany(\''+${session.currentUserId}+'\');'">
+						<input type="hidden" id="currentUser" th:attr="value = ${session.currentUserId}" />
+						<!-- Default panel contents -->
+						<div class="panel-heading" style="background-color: #093272">
+							<table>
+								<thead>
+									<tr>
+										<th width="100%"><span class="lead" style="color: #FFFFFF">
+												Lista de decodificadores | total {{deviceCtrl.devices.length}} </span></th>
+										<th width="100%">
+											<div align="right">
+												<a href="" id="" class="btn btn-success" data-toggle="modal"
+													data-target="#creatingDeviceModal"
+													ng-click="deviceCtrl.resetCreateSubscriberAccountModal();"
+													style="color: #000000"> <i class="material-icons"> <svg
+															style="width: 24px; height: 24px">
+			              								<path fill="#000000"
+																d="M12,5A7,7 0 0,0 5,12H7A5,5 0 0,1 12,7A5,5 0 0,1 17,12H19A7,7 0 0,0 12,5M13,14.29C13.88,13.9 14.5,13.03 14.5,12A2.5,2.5 0 0,0 12,9.5A2.5,2.5 0 0,0 9.5,12C9.5,13 10.12,13.9 11,14.29V17.59L7.59,21L9,22.41L12,19.41L15,22.41L16.41,21L13,17.59V14.29M12,1A11,11 0 0,0 1,12H3A9,9 0 0,1 12,3A9,9 0 0,1 21,12H23A11,11 0 0,0 12,1Z" />
+			            							</svg>
+												</i> Nuevo
+												</a>
+											</div>
+										</th>
+									</tr>
+								</thead>
+							</table>
+						</div>
+						<div class="tableFixHead">
+							<table>
+								<thead>
+									<tr>
+										<th>MAC</th>
+										<th>Activo</th>
+										<th>En prueba</th>
+										<th>Cliente</th>
+										<th width="30%">Acción</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr ng-repeat="d in deviceCtrl.devices">
+										<td><span ng-bind="d.udid"></span></td>
+										<td><span ng-if="d.active==true"> Si </span> <span
+											ng-if="d.active==false"> No </span></td>
+										<td><span ng-if="d.test==true"> Si </span> <span
+											ng-if="d.test==false"> No </span></td>
+										<td><span ng-bind="d.description"></span></td>
+										<td>
+											<button type="button" class="btn btn-default"
+												data-toggle="modal" data-target="#updatingDeviceModal"
+												style="background-color: #ECAA3C"
+												ng-click="deviceCtrl.edit(d.udid);">
+												<span class="glyphicon glyphicon-edit"></span> Editar
+											</button>
+	
+											<button type="button" class="btn btn-default"
+												style="background-color: #FFCA28"
+												ng-click="statsCtrl.calculateCompanyMacConsumption(d.udid);">
+												<span id="stats-btn-span-{{d.udid}}"
+													class="glyphicon glyphicon-hdd"></span> Consumo
+											</button>
+	
+											<button th:if="${session.authority} == 'ROLE_ADMIN'"
+												type="button" class="btn btn-default"
+												style="background-color: #D32F2F"
+												ng-click="deviceCtrl.deleteDevice(d.udid);">
+												<span class="glyphicon glyphicon-trash"></span> Borrar
+											</button>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+	
+				<!-- Create device modal -->
+				<div class="modal fade" id="creatingDeviceModal" role="dialog"
+					ng-controller="DeviceController as deviceCtrl">
+					<div class="modal-dialog">
+	
+						<!-- Modal content-->
+						<div class="modal-content">
+							<div class="modal-header" style="background-color: #093272">
+								<button type="button" class="close" data-dismiss="modal"
+									style="color: #FFFFFF">&times;</button>
+								<h4 class="modal-title" style="color: #FFFFFF">Nuevo
+									decodificador</h4>
+							</div>
+							<div class="modal-body">
+								<div class="md-form mb-5">
+									<!-- <input type="hidden" id="currentUser"
+									th:attr="value = ${session.currentUserId}" /> -->
+									<form ng-submit="deviceCtrl.createDevice()" id="idForm"
+										name="myForm" class="form-horizontal">
+										<div class="form-group">
+											<label class="col-sm-4 control-label" for="macToCreate">
+												MAC </label>
+											<div class="col-sm-8">
+												<input type="text" ng-model="deviceCtrl.device.udid"
+													id="macToCreate" name="macToCreate" required />
+											</div>
+										</div>
+										<div class="form-group">
+											<label class="col-sm-4 control-label" for="description">
+												Cliente </label>
+											<div class="col-sm-8">
+												<textarea rows="4" cols="20" name="description"
+													id="description" ng-model="deviceCtrl.device.description"
+													form="idForm">  </textarea>
+											</div>
+										</div>
+										<div class="form-group">
+											<label class="col-sm-4 control-label" for="active">
+												Activo </label>
+											<div class="col-sm-8">
+												<input type="checkbox" ng-model="deviceCtrl.device.active"
+													id="active" name="active" value="true">
+											</div>
+										</div>
+	
+										<div class="form-group"
+											th:if="${session.authority} == 'ROLE_ADMIN'">
+											<label class="col-sm-4 control-label" for="test"> En
+												prueba </label>
+											<div class="col-sm-8">
+												<input type="checkbox" id="passChecked" name="passChecked"
+													checked onClick="" style="display: none"> <input
+													type="checkbox" ng-model="deviceCtrl.device.test" id="test"
+													name="test" value="true">
+											</div>
+										</div>
+	
+										<div class="form-group text-center">
+											<button type="submit" class="btn"
+												style="background-color: #093272; color: #FFFFFF"
+												ng-disabled="myForm.$invalid">
+												<span class="glyphicon glyphicon-floppy-disk"></span> Guardar
+											</button>
+											<button id="resetButton" type="button"
+												style="background-color: #9F9C97; color: #FFFFFF"
+												ng-click="deviceCtrl.resetCreateDeviceModalForm()"
+												class="btn">
+												<span class="glyphicon glyphicon-repeat"></span> Limpiar
+											</button>
+										</div>
+									</form>
+								</div>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-default"
+									data-dismiss="modal"
+									style="background-color: #B50C14; color: #FFFFFF">
+									<span class="glyphicon glyphicon-remove"></span> Cerrar
+								</button>
+							</div>
+						</div>
+	
+					</div>
+				</div>
+	
+				<!-- Update device modal -->
+				<div class="modal fade" id="updatingDeviceModal" role="dialog">
+					<div class="modal-dialog">
+	
+						<!-- Modal content-->
+						<div class="modal-content">
+							<div class="modal-header" style="background-color: #093272">
+								<button type="button" class="close" data-dismiss="modal"
+									style="color: #FFFFFF">&times;</button>
+								<h4 class="modal-title" style="color: #FFFFFF">Modificar
+									decodificador</h4>
+							</div>
+							<div class="modal-body">
+								<div class="md-form mb-5">
+									<!-- <input type="hidden" id="currentUser"
+									th:attr="value = ${session.currentUserId}" /> -->
+									<form ng-submit="deviceCtrl.updateDevice()" id="idForm"
+										name="myForm" class="form-horizontal">
+										<div class="form-group">
+											<label class="col-sm-4 control-label" for="macToUpdate">
+												MAC </label>
+											<div class="col-sm-8">
+												<input type="text" ng-model="deviceCtrl.device.udid"
+													id="macToUpdate" name="macToUpdate" disabled />
+											</div>
+										</div>
+										<div class="form-group">
+											<label class="col-sm-4 control-label" for="creationDate">
+												Fecha de creación </label>
+											<div class="col-sm-8">
+												<input type="text" ng-model="deviceCtrl.device.creationDate"
+													id="creationDate" name="creationDate" disabled />
+											</div>
+										</div>
+										<div class="form-group">
+											<label class="col-sm-4 control-label" for="activeDate">
+												F. última activación </label>
+											<div class="col-sm-8">
+												<input type="text" ng-model="deviceCtrl.device.activeDate"
+													id="activeDate" name="activeDate" disabled />
+											</div>
+										</div>
+										<div class="form-group">
+											<label class="col-sm-4 control-label" for="desactivationDate">
+												F. última desactivación </label>
+											<div class="col-sm-8">
+												<input type="text"
+													ng-model="deviceCtrl.device.desactivationDate"
+													id="desactivationDate" name="desactivationDate" disabled />
+											</div>
+										</div>
+										<div class="form-group">
+											<label class="col-sm-4 control-label" for="description">
+												Cliente </label>
+											<div class="col-sm-8">
+												<textarea rows="4" cols="20" name="description"
+													id="description" ng-model="deviceCtrl.device.description"
+													form="idForm">  </textarea>
+											</div>
+	
+										</div>
+										<div class="form-group">
+											<label class="col-sm-4 control-label" for="active">
+												Activo </label>
+											<div class="col-sm-8">
+												<input type="checkbox" ng-model="deviceCtrl.device.active"
+													id="active" name="active" value="true">
+											</div>
+										</div>
+	
+										<div class="form-group"
+											th:if="${session.authority} == 'ROLE_ADMIN'">
+											<label class="col-sm-4 control-label" for="test"> En
+												prueba </label>
+											<div class="col-sm-8">
+												<input type="checkbox" id="passChecked" name="passChecked"
+													checked onClick="" style="display: none"> <input
+													type="checkbox" ng-model="deviceCtrl.device.test" id="test"
+													name="test" value="true">
+											</div>
+										</div>
+										<div class="form-group text-center">
+											<button type="submit" class="btn"
+												style="background-color: #093272; color: #FFFFFF"
+												ng-disabled="myForm.$invalid">
+												<span class="glyphicon glyphicon-floppy-disk"></span> Guardar
+											</button>
+											<button id="resetButton" type="button"
+												style="background-color: #9F9C97; color: #FFFFFF"
+												ng-click="deviceCtrl.resetUpdateDeviceModalForm()"
+												class="btn">
+												<span class="glyphicon glyphicon-repeat"></span> Limpiar
+											</button>
+										</div>
+									</form>
+								</div>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-default"
+									data-dismiss="modal"
+									style="background-color: #B50C14; color: #FFFFFF">
+									<span class="glyphicon glyphicon-remove"></span> Cerrar
+								</button>
+							</div>
+						</div>
+	
+					</div>
+				</div>
+			</div>
+	
+			<div class="footer">
+				<footer>
+					<div class="inner">
+						<p>ÑÑ.TV 2019 ® - All rights reserved.</p>
+					</div>
+				</footer>
+			</div>
+			<script
+				src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.5/angular.js"></script>
+	
+			<script th:src="@{js/jquery-3.3.1.min.js}"></script>
+	
+			<script th:src="@{js/app.js}"></script>
+			<script th:src="@{js/service/device_service.js}"></script>
+			<script th:src="@{js/controller/device_controller.js}"></script>
+			<script th:src="@{js/service/stats_service.js}"></script>
+			<script th:src="@{js/controller/stats_controller.js}"></script>
+	</body>
+</html>

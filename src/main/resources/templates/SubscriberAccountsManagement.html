@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+	<head>
+		<title>Devices management</title>
+		<style>
+			.username.ng-valid {
+				background-color: lightgreen;
+			}
+			
+			.username.ng-dirty.ng-invalid-required {
+				background-color: red;
+			}
+			
+			.username.ng-dirty.ng-invalid-minlength {
+				background-color: yellow;
+			}
+			
+			.email.ng-valid {
+				background-color: lightgreen;
+			}
+			
+			.email.ng-dirty.ng-invalid-required {
+				background-color: red;
+			}
+			
+			.email.ng-dirty.ng-invalid-email {
+				background-color: yellow;
+			}
+			
+			.tableFixHead {
+				overflow-y: auto;
+				height: 365px;
+			}
+			
+			.tableFixHead table {
+				border-collapse: collapse;
+				width: 100%;
+			}
+			
+			.tableFixHead th, .tableFixHead td {
+				padding: 8px 16px;
+			}
+			
+			.tableFixHead th {
+				position: sticky;
+				top: 0;
+				background: #eee;
+			}
+			
+			.header {
+				overflow: hidden;
+				background-color: #9F9C97;
+				padding: 20px 10px;
+			}
+			
+			.header a {
+				float: left;
+				color: white;
+				text-align: center;
+				padding: 12px;
+				text-decoration: none;
+				font-size: 16px;
+				line-height: 25px;
+				border-radius: 4px;
+			}
+			
+			.header a.logo {
+				font-size: 16px;
+				font-weight: bold;
+			}
+			
+			.header a:hover {
+				background-color: #ddd;
+				color: black;
+			}
+			
+			.header a.active {
+				background-color: #093272;
+				color: white;
+			}
+			
+			.header-right {
+				float: right;
+			}
+			
+			.footer {
+				position: fixed;
+				bottom: 0;
+				width: 100%;
+				height: 80px; /* Height of the footer */
+				background-color: #9F9C97;
+				color: white;
+				text-align: center;
+			}
+			
+			.float {
+				position: absolute;
+				width: 60px;
+				height: 60px;
+				background-color: #0C9;
+				color: #FFF;
+				border-radius: 50px;
+				text-align: center;
+				box-shadow: 2px 2px 3px #999;
+			}
+		</style>
+	
+		<link rel="stylesheet" href="css/select-boxes/chosen.css">
+		<link rel="stylesheet" href="css/select-boxes/chosen.min.css">
+		<link rel="stylesheet"
+			href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+		<script th:src="@{js/jquery-3.3.1.min.js}"></script>
+		<script
+			src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script
+			src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		
+		<script
+			src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.5/angular.js"></script>
+		<script th:src="@{js/app.js}"></script>
+		<script th:src="@{js/service/company_account_service.js}"></script>
+		<script th:src="@{js/controller/company_account_controller.js}"></script>
+		<script th:src="@{js/service/subscriber_account_service.js}"></script>
+		<script th:src="@{js/controller/subscriber_account_controller.js}"></script>
+		<script th:src="@{js/service/stats_service.js}"></script>
+		<script th:src="@{js/controller/stats_controller.js}"></script>
+		
+		<script th:src="@{js/select-boxes/chosen.jquery.js}"></script>
+		<script th:src="@{js/select-boxes/chosen.jquery.min.js}"></script>
+		<script th:src="@{js/select-boxes/chosen.proto.js}"></script>
+		<script th:src="@{js/select-boxes/chosen.proto.min.js}"></script>
+	</head>
+
+	<body ng-app="perfiles" class="ng-cloak" ng-controller="SubscriberAccountController as subscriberAccountCtrl">
+		<div class="header">
+			<img th:src="@{images/logonn.png}" />
+			<div class="header-right" ng-controller="StatsController as statsCtrl">
+				<a href="http://localhost:8081/nntv-control/devices">Decodificadores</a>
+				<a class="active" href="http://localhost:8081/nntv-control/accounts">Cuentas</a>
+				<a th:if="${session.authority} == 'ROLE_COMPANY'" id="globalConsumption" class="btn btn-light" ng-click="statsCtrl.calculateGlobalCompanyConsumption();">
+					Consumo global
+				</a>
+				<a th:if="${session.authority} == 'ROLE_ADMIN'" id="globalConsumption" class="btn btn-light" ng-click="statsCtrl.calculateGlobalConsumption();">
+					Consumo global
+				</a>
+				
+				<a th:href="@{/logout}" method="post"
+					class="glyphicon glyphicon-log-out" title="Salir"></a>
+			</div>
+		</div>
+	
+		<div>
+			<div class="generic-container">
+				<div class="panel-body">
+					<div class="panel panel-default"
+						th:attr="ng-init='subscriberAccountCtrl.fetchAllSubscriberAccountsOfCompany(\''+${session.currentUserId}+'\');'">
+						<input type="hidden" id="currentUser"
+							th:attr="value = ${session.currentUserId}" />
+						<!-- Default panel contents -->
+						<div class="panel-heading" style="background-color: #093272">
+							<table>
+								<thead>
+									<tr>
+										<th width="100%"><span class="lead" style="color: #FFFFFF">
+												Lista de cuentas de usuario | total {{subscriberAccountCtrl.subscriberAccounts.length}} </span></th>
+										<th width="100%">
+											<div align="right">
+												<a href="" id="" class="btn btn-success" data-toggle="modal"
+													data-target="#createSubscriberAccountModal"
+													ng-click="subscriberAccountCtrl.resetCreateSubscriberAccountModal();"
+													style="color: #000000"> <i class="material-icons"> <svg
+															style="width: 24px; height: 24px">
+			              								<path fill="#000000"
+																d="M16 11c1.66 0 2.99-1.34 2.99-3s-1.33-3-2.99-3c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3s-1.33-3-2.99-3c-1.66 0-3 1.34-3 3s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5v2.5h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45v2.5h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+			            							</svg>
+												</i> Nuevo
+												</a>
+											</div>
+										</th>
+									</tr>
+								</thead>
+							</table>
+						</div>
+						<div class="tableFixHead">
+							<table>
+								<thead>
+									<tr>
+										<th>Email</th>
+										<th>Contraseña</th>
+										<th>Tipo</th>
+										<th>Nombre</th>
+										<th>Apellidos</th>
+										<th width="30%">Acción</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr ng-repeat="u in subscriberAccountCtrl.subscriberAccounts">
+										<td><span ng-bind="u.email"></span></td>
+										<td><span ng-bind="u.password"></span></td>
+										<td><span ng-bind="u.subscriberType"></span></td>
+										<td><span ng-bind="u.firstName"></span></td>
+										<td><span ng-bind="u.lastName"></span></td>
+										<td>
+											<button type="button" class="btn btn-default"
+												data-toggle="modal"
+												data-target="#updateSubscriberAccountModal"
+												style="background-color: #ECAA3C"
+												ng-click="subscriberAccountCtrl.edit(u.email);">
+												<span class="glyphicon glyphicon-edit"></span> Editar
+											</button>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	
+		<!-- Create subscriber account -->
+		<div class="modal fade" id="createSubscriberAccountModal" role="dialog">
+			<div class="modal-dialog">
+	
+				<!-- Modal content-->
+				<div class="modal-content">
+					<div class="modal-header" style="background-color: #093272">
+						<button type="button" class="close" data-dismiss="modal"
+							style="color: #FFFFFF">&times;</button>
+						<h4 class="modal-title" style="color: #FFFFFF">Nuevo
+							suscriptor</h4>
+					</div>
+					<div class="modal-body">
+						<div class="md-form mb-5">
+							<form ng-submit="subscriberAccountCtrl.createSubscriberAccount()"
+								id="idForm" name="myForm" class="form-horizontal">
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="firstName">
+										Nombre </label>
+									<div class="col-sm-8">
+										<input type="text"
+											ng-model="subscriberAccountCtrl.subscriberAccount.firstName"
+											id="firstName" name="firstName" />
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="lastName">
+										Apellidos </label>
+									<div class="col-sm-8">
+										<input type="text"
+											ng-model="subscriberAccountCtrl.subscriberAccount.lastName"
+											id="lastName" name="lastName" />
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="email"> Email
+									</label>
+									<div class="col-sm-8">
+										<input type="text"
+											ng-model="subscriberAccountCtrl.subscriberAccount.email"
+											id="email" name="email" required />
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="password">
+										Contraseña </label>
+									<div class="col-sm-8">
+										<input type="text"
+											ng-model="subscriberAccountCtrl.subscriberAccount.password"
+											id="password" name="password" required />
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="country">
+										País </label>
+									<div class="col-sm-8">
+										<input type="text"
+											ng-model="subscriberAccountCtrl.subscriberAccount.country"
+											id="country" name="country" />
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="city"> Ciudad
+									</label>
+									<div class="col-sm-8">
+										<input type="text"
+											ng-model="subscriberAccountCtrl.subscriberAccount.city"
+											id="city" name="city" />
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="address">
+										Dirección </label>
+									<div class="col-sm-8">
+										<input type="text"
+											ng-model="subscriberAccountCtrl.subscriberAccount.address"
+											id="address" name="address" />
+									</div>
+								</div>
+								<!-- <div class="form-group">
+									<label class="col-sm-4 control-label" for="postalCode">
+										Código postal </label>
+									<div class="col-sm-8">
+										<input type="text"
+											ng-model="subscriberAccountCtrl.subscriberAccount.postalCode"
+											id="postalCode" name="postalCode" />
+									</div>
+								</div> -->
+								
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="subscriberType">
+										Tipo </label>
+									<div class="col-sm-8">
+										 <select name="subscriberType" id="subscriberType" ng-model="subscriberAccountCtrl.subscriberAccount.subscriberType">
+											<option value="STB">STB</option>
+											<option selected="selected" value="MOVIL">MOVIL</option>
+											<option value="ANDROIDTV">ANDROIDTV</option>
+											<option value="SAMSUNG">SAMSUNG</option>
+											<option value="LG">LG</option>
+										</select> 
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="description">
+										Descripción </label>
+									<div class="col-sm-8">
+										<textarea rows="4" cols="20" name="description"
+											id="description"
+											ng-model="subscriberAccountCtrl.subscriberAccount.description"
+											form="idForm">  </textarea>
+									</div>
+								</div>
+								<div class="form-group text-center">
+									<button type="submit" class="btn"
+										style="background-color: #093272; color: #FFFFFF">
+										<span class="glyphicon glyphicon-floppy-disk"></span> Guardar
+									</button>
+									<button id="resetButton" type="button"
+										style="background-color: #9F9C97; color: #FFFFFF"
+										ng-click="subscriberAccountCtrl.resetCreateSubscriberAccountModal()"
+										class="btn">
+										<span class="glyphicon glyphicon-repeat"></span> Limpiar
+									</button>
+								</div>
+							</form>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal"
+							style="background-color: #B50C14; color: #FFFFFF">
+							<span class="glyphicon glyphicon-remove"></span> Cerrar
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	
+		<!-- Update subscriber account -->
+		<div class="modal fade" id="updateSubscriberAccountModal" role="dialog">
+			<div class="modal-dialog">
+	
+				<!-- Modal content-->
+				<div class="modal-content">
+					<div class="modal-header" style="background-color: #093272">
+						<button type="button" class="close" data-dismiss="modal"
+							style="color: #FFFFFF">&times;</button>
+						<h4 class="modal-title" style="color: #FFFFFF">Información
+							suscriptor</h4>
+					</div>
+					<div class="modal-body">
+						<div class="md-form mb-5">
+							<form ng-submit="subscriberAccountCtrl.updateSubscriberAccount()"
+								id="idForm" name="myForm" class="form-horizontal">
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="firstName">
+										Nombre </label>
+									<div class="col-sm-8">
+										<input type="text"
+											ng-model="subscriberAccountCtrl.subscriberAccount.firstName"
+											id="firstName" name="firstName" />
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="lastName">
+										Apellidos </label>
+									<div class="col-sm-8">
+										<input type="text"
+											ng-model="subscriberAccountCtrl.subscriberAccount.lastName"
+											id="lastName" name="lastName" />
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="email"> Email
+									</label>
+									<div class="col-sm-8">
+										<input type="text"
+											ng-model="subscriberAccountCtrl.subscriberAccount.email"
+											id="email" name="email"/>
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="password">
+										Contraseña </label>
+									<div class="col-sm-8">
+										<input type="text"
+											ng-model="subscriberAccountCtrl.subscriberAccount.password"
+											id="password" name="password" required />
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="country">
+										País </label>
+									<div class="col-sm-8">
+										<input type="text"
+											ng-model="subscriberAccountCtrl.subscriberAccount.country"
+											id="country" name="country" />
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="city"> Ciudad
+									</label>
+									<div class="col-sm-8">
+										<input type="text"
+											ng-model="subscriberAccountCtrl.subscriberAccount.city"
+											id="city" name="city" />
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="address">
+										Dirección </label>
+									<div class="col-sm-8">
+										<input type="text"
+											ng-model="subscriberAccountCtrl.subscriberAccount.address"
+											id="address" name="address" />
+									</div>
+								</div>
+								<!-- <div class="form-group">
+									<label class="col-sm-4 control-label" for="postalCode">
+										Código postal </label>
+									<div class="col-sm-8">
+										<input type="text"
+											ng-model="subscriberAccountCtrl.subscriberAccount.postalCode"
+											id="postalCode" name="postalCode" />
+									</div>
+								</div> -->
+								
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="subscriberType">
+										Tipo </label>
+									<div class="col-sm-8">
+										 <select name="subscriberType" id="subscriberType" ng-model="subscriberAccountCtrl.subscriberAccount.subscriberType">
+											<option ng:if="subscriberType == 'STB'" selected="selected" value="STB">STB</option>
+											<option ng:if="subscriberType != 'STB'" value="STB">STB</option>
+											<option ng:if="subscriberType == 'MOVIL'" selected="selected" value="MOVIL">MOVIL</option>
+											<option ng:if="subscriberType != 'MOVIL'" value="MOVIL">MOVIL</option>
+											<option ng:if="subscriberType == 'ANDROIDTV'" selected="selected" value="ANDROIDTV">ANDROIDTV</option>
+											<option ng:if="subscriberType != 'ANDROIDTV'" value="ANDROIDTV">ANDROIDTV</option>
+											<option ng:if="subscriberType == 'SAMSUNG'" selected="selected" value="SAMSUNG">SAMSUNG</option>
+											<option ng:if="subscriberType != 'SAMSUNG'" value="SAMSUNG">SAMSUNG</option>
+											<option ng:if="subscriberType == 'LG'" selected="selected" value="LG">LG</option>
+											<option ng:if="subscriberType != 'LG'" value="LG">LG</option>
+										</select> 
+									</div>
+								</div>
+								
+								<div class="form-group">
+									<label class="col-sm-4 control-label" for="description">
+										Descripción </label>
+									<div class="col-sm-8">
+										<textarea rows="4" cols="20" name="description"
+											id="description"
+											ng-model="subscriberAccountCtrl.subscriberAccount.description"
+											form="idForm">  </textarea>
+									</div>
+								</div>
+								<div class="form-group text-center">
+									<button type="submit" class="btn"
+										style="background-color: #093272; color: #FFFFFF">
+										<span class="glyphicon glyphicon-floppy-disk"></span> Guardar
+									</button>
+									<button id="resetButton" type="button"
+										style="background-color: #9F9C97; color: #FFFFFF"
+										ng-click="subscriberAccountCtrl.resetUpdateSubscriberAccountModal()"
+										class="btn">
+										<span class="glyphicon glyphicon-repeat"></span> Limpiar
+									</button>
+								</div>
+							</form>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal"
+							style="background-color: #B50C14; color: #FFFFFF">
+							<span class="glyphicon glyphicon-remove"></span> Cerrar
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	
+		<div class="footer">
+			<footer>
+				<div class="inner">
+					<p>ÑÑ.TV 2019 ® - All rights reserved.</p>
+				</div>
+			</footer>
+		</div>
+	
+	</body>
+</html>
